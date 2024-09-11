@@ -18,5 +18,4 @@ COPY --from=builder /usr/local/lib/python3.11/site-packages /usr/local/lib/pytho
 # Copy the application source code
 COPY main.py .
 
-# Set the entrypoint
-ENTRYPOINT ["python", "main.py"]
+CMD ["python", "main.py"]

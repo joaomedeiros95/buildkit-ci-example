@@ -1,5 +1,6 @@
 stages:
   - build
+  - test
 
 variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE/python:${CI_COMMIT_SHA}
@@ -37,3 +38,7 @@ build-buildkit:
           --import-cache type=registry,ref="${IMAGE_CACHE_NAME}:${CI_COMMIT_REF_SLUG}" \
           --output type=image,name=${IMAGE_NAME},push=true
 
+test-image:
+  stage: test
+  image: $IMAGE_NAME
+  script: "python main.py"
