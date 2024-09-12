@@ -44,7 +44,7 @@ jobs:
             --push \
             .
 
-  test:
+  test-image:
     name: Test the image
     runs-on: ubuntu-latest
     container: ghcr.io/${{ github.repository }}/python:${{ github.sha }}
