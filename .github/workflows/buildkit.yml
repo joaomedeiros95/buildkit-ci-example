@@ -1,0 +1,57 @@
+name: Build Docker image with BuildKit
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/${{ github.repository }}
+
+jobs:
+  build-buildkit:
+    name: Build with BuildKit
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image using BuildKit
+        run: |
+          docker buildx build \
+            --cache-to=type=registry,ref="${{ env.IMAGE_NAME }}/cache:${{ github.ref_name }}",mode=max \
+            --cache-from=type=registry,ref="${{ env.IMAGE_NAME }}/cache:main" \
+            --cache-from=type=registry,ref="${{ env.IMAGE_NAME }}/cache:${{ github.ref_name }}" \
+            --tag "${{ env.IMAGE_NAME }}/python:${{ github.sha }}" \
+            --push \
+            .
+
+  test:
+    name: Test the image
+    runs-on: ubuntu-latest
+    container: ghcr.io/${{ github.repository }}/python:${{ github.sha }}
+    needs: build-buildkit
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run the image
+        run: python main.py
